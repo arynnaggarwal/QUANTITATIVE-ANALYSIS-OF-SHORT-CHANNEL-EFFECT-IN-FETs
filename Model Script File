@@ -1,0 +1,128 @@
+;##########################################################################
+; PARAMETERS
+;#########################################################################
+;****************************defined parameters******************************
+(define Xbox 136)
+(define Ybox 136 )
+(define Zbox 36)
+(define Xs 10)
+(define Ys 50)
+(define Xd 10)
+(define Yd 50)
+(define Yg 40)
+(define Yl 2)
+(define Tox -7)
+(set! Xbox (/ Xbox 1e3))
+(set! Ybox (/ Ybox 1e3))
+(set! Zbox (/ Zbox 1e3))
+(set! Xs (/ Xs 1e3))
+(set! Ys (/ Ys 1e3)
+(set! Xd (/ Xd 1e3))
+(set! Yd (/ Yd 1e3))
+(set! Yl (/ Yl 1e3))
+(set! Tox(/ Tox 1e3))
+(set! Yg(/ Yg 1e3))
+; *****************************derived parameters***************************
+(define Ygmin(- Yd Yl))
+(define Ygmax(+ Ygmin Yg))
+(define Ydmin(- Ybox Yd))
+(define Xg(- Tox Xd))
+;*******************************SUBSTRATE**********************************
+(sdegeo:set-default-boolean "ABA")
+"ABA"
+(sdegeo:create-cuboid
+(position 0 0 0) 
+(position Xbox Ybox Zbox)
+"Silicon" "region_SUBSTRATE"
+)
+;*************************************SOURCE*******************************
+(sdegeo:set-default-boolean "ABA")
+"ABA"
+(sdegeo:create-cuboid
+(position 0 0 0) 
+(position Xs Ys Zbox)
+"Silicon" "source"
+)
+;***********************************DRAIN**********************************
+(sdegeo:set-default-boolean "ABA")
+"ABA"
+(sdegeo:create-cuboid
+(position 0 Ydmin 0 ) 
+(position Xd Ybox Zbox)
+"Silicon" "drain"
+)
+;******************************GATE OXIDE***********************************
+(sdegeo:set-default-boolean "ABA")
+"ABA"
+(sdegeo:create-cuboid
+(position 0 Ygmin 0 ) 
+(position Tox Ygmax Zbox )
+"SiO2" "Gate Oxide"
+)
+;***********************************GATE ***********************************
+(sdegeo:set-default-boolean "ABA")
+"ABA"
+(sdegeo:create-cuboid
+(position Tox Ygmin 0 ) 
+(position Xg Ygmax Zbox)
+"Metal" "Gate"
+)
+;******************************DOPING**************************************
+;***************************Source***************************
+(sdedr:define-constant-profile "ConstantProfileDefinition_source" "ArsenicActiveConcentration" 
+2e+20)
+(sdedr:define-constant-profile-region "ConstantProfilePlacement_source" 
+"ConstantProfileDefinition_source" "source")
+;***************************Drain***************************
+(sdedr:define-constant-profile "ConstantProfileDefinition_drain" "ArsenicActiveConcentration" 
+2e+20)
+(sdedr:define-constant-profile-region "ConstantProfilePlacement_drain" 
+"ConstantProfileDefinition_drain" "drain")
+;***************************Substrate***************************
+(sdedr:define-constant-profile "ConstantProfileDefinition_substrate" "BoronActiveConcentration" 
+1e+17)
+(sdedr:define-constant-profile-region "ConstantProfilePlacement_substrate" 
+"ConstantProfileDefinition_substrate" "region_SUBSTRATE")
+;##########################################################################
+; CONTACTS
+;##########################################################################
+(sdegeo:create-cuboid (position 0 0.0075 0.0005) (position -0.002 0.0425 0.0355) "Metal" 
+"region_source_contact")
+(sdegeo:create-cuboid (position 0 0.0935 0.0005) (position -0.002 0.1285 0.0355) "Metal" 
+"region_drain_contact")
+(sdegeo:create-cuboid (position -0.017 0.0525 0.0025) (position -0.019 0.0835 0.0335) "Metal" 
+"region_gate_contact")
+(sdegeo:create-cuboid (position 0.136 0.0505 0.0005) (position 0.138 0.0855 0.0355) "Metal" 
+"region_substrate_contact")
+(sdegeo:define-contact-set "G" 4 (color:rgb 1 0 0 ) "##")
+(sdegeo:define-contact-set "S" 4 (color:rgb 1 1 0 ) "##")
+(sdegeo:define-contact-set "D" 4 (color:rgb 1 1 1 ) "##")
+(sdegeo:define-contact-set "Sub" 4 (color:rgb 0 1 1 ) "##")
+(sdegeo:set-current-contact-set "S")
+"none"
+(sdegeo:define-3d-contact (list (car (find-face-id (position -0.002 0.025 0.018)))) "S")
+(render:rebuild)
+(sdegeo:set-current-contact-set "D")
+"source"
+(sdegeo:define-3d-contact (list (car (find-face-id (position -0.002 0.111 0.018)))) "D")
+(render:rebuild)
+(sdegeo:set-current-contact-set "G")
+"drain"
+(sdegeo:define-3d-contact (list (car (find-face-id (position -0.019 0.068 0.018)))) "G")
+(render:rebuild)
+(sdegeo:set-current-contact-set "Sub")
+"drain"
+(sdegeo:define-3d-contact (list (car (find-face-id (position 0.138 0.068 0.018)))) "Sub")
+(render:rebuild)
+;##########################################################################
+; MESHING
+;##########################################################################
+(sdedr:define-refinement-size "RefinementDefinition_silicon" 0.004 0.012 0.01 0.002 0.006 0.005 )
+(sdedr:define-refinement-material "RefinementPlacement_silicon" "RefinementDefinition_silicon" 
+"Silicon" )
+(sdedr:define-refinement-size "RefinementDefinition_SiO2" 0.002 0.006 0.01 0.002 0.003 0.005 )
+29
+(sdedr:define-refinement-material "RefinementPlacement_SiO2" "RefinementDefinition_SiO2" 
+"SiO2" )
+(sdedr:define-refinement-size "RefinementDefinition_Metal" 0.0004 0.006 0.01 0.0002 0.003 0.005 )
+(sdedr:define-refinement-material "RefinementPlacement_Metal" "RefinementDefinition_Metal" "Metal" )
